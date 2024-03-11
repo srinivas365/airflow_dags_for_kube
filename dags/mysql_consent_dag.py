@@ -11,7 +11,7 @@ import os
 
 os.environ["no_proxy"] = "*"
 
-URL = 'http://138.201.63.104:5000/submit'
+URL = 'http://138.201.63.104:5010/submit'
 
 # MySQL Server Connection Details
 # host = 'your_mysql_host'
