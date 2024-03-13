@@ -2,12 +2,12 @@
 from collections import defaultdict
 import pendulum
 from airflow.decorators import dag, task
-import mysql.connector
 from airflow.operators.python import get_current_context
 import re
 import json
 import requests
 import os
+import psycopg2
 
 os.environ["no_proxy"] = "*"
 
@@ -36,14 +36,13 @@ def regex_match(values, regex_exp, match_threshold):
         return False
     
 @dag(
-    'mysql_consent_dag',
+    'postgresql_consent_dag',
     schedule=None,
     start_date=pendulum.datetime(2023, 3, 6, tz="UTC"),
     catchup=False,
     tags=["example"],
 )
-def mysql_consent_dag():
-        
+def postgresql_consent_dag():
     @task()
     def fetch_tables(**kwargs):
         dag_run_conf = kwargs['dag_run'].conf
@@ -51,13 +50,13 @@ def mysql_consent_dag():
         
         try:
             # Establish a connection to the MySQL server
-            connection = mysql.connector.connect(**kwargs['dag_run'].conf["data_source"]["creds"])
+            connection = psycopg2.connect(**kwargs['dag_run'].conf["data_source"]["creds"])
 
             # Create a cursor object to execute SQL queries
             cursor = connection.cursor()
 
             # Execute the query to get the list of tables
-            cursor.execute("SHOW TABLES")
+            cursor.execute("select table_name from information_schema where table_schema='public'")
 
             # Fetch all tables from the cursor
             tables = [table[0] for table in cursor.fetchall()]
@@ -66,7 +65,7 @@ def mysql_consent_dag():
             
             return tables
         
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             print(f"Error: {err}")
 
     @task
@@ -79,7 +78,7 @@ def mysql_consent_dag():
         
         try:
             # Establish a connection to the MySQL server
-            connection = mysql.connector.connect(**context['params']["data_source"]["creds"])
+            connection = psycopg2.connect(**context['params']["data_source"]["creds"])
 
             # Create a cursor object to execute SQL queries
             cursor = connection.cursor()
@@ -110,9 +109,9 @@ def mysql_consent_dag():
             response = requests.request("POST", URL, headers = {'Content-Type': 'application/json'}, data = payload)
             print(response.text)
             
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             print(f"Error: {err}")
         
     consumer.expand(table=fetch_tables())
 
-mysql_consent_dag_instance = mysql_consent_dag()
+postgresql_consent_dag_instance = postgresql_consent_dag()
