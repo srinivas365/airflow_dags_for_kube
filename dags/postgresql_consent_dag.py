@@ -56,7 +56,7 @@ def postgresql_consent_dag():
             cursor = connection.cursor()
 
             # Execute the query to get the list of tables
-            cursor.execute("select table_name from information_schema where table_schema='public'")
+            cursor.execute("select table_name from information_schema.tables where table_schema='public'")
 
             # Fetch all tables from the cursor
             tables = [table[0] for table in cursor.fetchall()]
