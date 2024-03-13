@@ -32,7 +32,7 @@ def regex_match(values, regex_exp, match_threshold):
         percentage_match = (matching_count / len(values)) * 100
         return percentage_match >= match_threshold
     except Exception as e:
-        print(f"got exception for: {regex_exp} values: {values}")
+        print(f"got exception for: {regex_exp} values: {values[:10]}")
         return False
     
 @dag(
